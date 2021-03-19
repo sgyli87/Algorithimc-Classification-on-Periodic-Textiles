@@ -1,0 +1,221 @@
+t_code = input("Enter textile_code: ")
+#t_code = "h1+ 1 2- v1+ 1- 2"
+
+
+#t_code = "h1+ 1 2- 3 1+ v1- 3- 2"
+#t_code = "h1+ v1- 1+ 2 v2+ 1 2+"
+#t_code = "h1+ 1+ 2 v1+ 1 2+ v2+"
+#t_code = "h1+ 1 2- 3+ 4 h2- 3 4+ v1+ 1- 2" #single jersey for example
+
+h_num = t_code.count("h") #count the number of h symbols
+v_num = t_code.count("v") #count the number of v symbols
+
+t_list = t_code.split(" ")
+t_list = t_list[1:]+[t_list[0]] # move the first h symbol to the end
+
+cross_num = 0
+
+for i in t_list:
+    if "h" not in i and "v" not in i:
+        cross_num +=1
+
+cross_num = int(cross_num/2) #count the number of crossings inside the textile
+
+len_x = 2*h_num+2
+len_y = 2*v_num+2
+
+divided_t_list = [] # used to hold the initial of each block
+
+h_orient = []
+v_orient = [] #used to mark the orientation of each winding symbol
+
+stride=0
+
+for i in range(len(t_list)):
+    if "h" in t_list[i]:
+        divided_t_list.append(t_list[i-stride:i+1])
+        stride=0
+        if "+" in t_list[i]:
+            h_orient.append("+")
+        else:
+            h_orient.append("-")
+    elif "v" in t_list[i]:
+        divided_t_list.append(t_list[i - stride:i+1])
+        stride = 0
+        if "+" in t_list[i]:
+            v_orient.append("+")
+        else:
+            v_orient.append("-")
+    else:
+        stride+=1
+
+h_orient.insert(0,h_orient.pop())#adjust the position of h1 symbol orientation
+
+hopf_1 = cross_num+len_y-1
+hopf_2 = cross_num+len_y #locate the two hopf link crossings
+
+#In the following section we encode Y component
+y_code_list = []
+
+for i in range(v_num):
+    y_code_list.append(str(cross_num+i+1)+v_orient[-1-i])
+
+for i in range(v_num,2*v_num):
+    y_code_list.append(str(cross_num+i+1))
+
+y_code_list.append(str(hopf_1)+"+")
+y_code_list.append(str(hopf_2))
+
+y_code_list.reverse() #for a clockwise orientation
+
+#Next we encode X componet
+x_code_list = []
+
+x_code_list.append(str(hopf_1))
+x_code_list.append(str(hopf_2)+"+")
+
+for i in range(h_num):
+    x_code_list.append(str(hopf_2+1+i)+h_orient[-1-i])
+
+for i in range(h_num,2*h_num):
+    x_code_list.append(str(hopf_2+1+i))
+
+#Now we head into the main code
+#Start by pairing the labels inside X and Y component
+#Also we need to add superscripts correctly
+
+temp_pair = [] # a buffer
+
+v_y_pair = []
+h_x_pair = []
+
+temp_str1="" #used to transfer the subscript
+temp_str2=""
+
+#pair Y labels
+for i in range(1,v_num+1):
+    temp_str1 = y_code_list[int(0.5 * len_y) + i][-1]
+    temp_str2 = y_code_list[int(0.5 * len_y) + i][:-1]
+
+    temp_pair.append(temp_str2)
+    temp_pair.append(y_code_list[int(0.5 * len_y) - i + 1] + temp_str1)
+
+    if "+" in v_orient[i-1]:
+        v_y_pair.append(temp_pair.copy())
+        temp_pair.clear()
+
+    if "-" in v_orient[i-1]:
+        temp_pair.reverse()
+        v_y_pair.append(temp_pair.copy())
+        temp_pair.clear()
+
+#pair X labels
+for i in range(1,h_num+1):
+    temp_str1 = x_code_list[int(0.5 * len_x) - i + 1][-1]
+    temp_str2 = x_code_list[int(0.5 * len_x) - i + 1][:-1]
+
+    temp_pair.append(temp_str2)
+    temp_pair.append(x_code_list[int(0.5 * len_x) + i] + temp_str1)
+
+    if "+" in h_orient[i-1]:
+        h_x_pair.append(temp_pair.copy())
+        temp_pair.clear()
+
+    if "-" in h_orient[i-1]:
+        temp_pair.reverse()
+        h_x_pair.append(temp_pair.copy())
+        temp_pair.clear()
+
+#Then we also need to group wrapping crossings
+#This part is a little bit complicate because unlike x and y where orientation is fixed
+#Here the superscripts are determined by h orientation and v orientation
+temp_group = []
+temp_str3 = ""
+
+v_w_group = []
+h_w_group = []
+
+start = hopf_1+len_x #the first label in the wrapping crossing area
+
+#v strands are undercrossings, thus need superscript
+for i in range(v_num-1,-1,-1):
+    for j in range(h_num):
+        if "+" in v_orient[v_num-i-1]:
+            if "+" in h_orient[j]:
+                temp_str3 = str(start+i*h_num+j)+"+"
+            else:
+                temp_str3 = str(start+i*h_num+j)+"-"
+            temp_group.append(temp_str3)
+            temp_group.reverse()# match up the orientation of strands
+        else:
+            if "+" in h_orient[j]:
+                temp_str3 = str(start+i*h_num+j)+"-"
+            else:
+                temp_str3 = str(start+i*h_num+j)+"+"
+            temp_group.append(temp_str3)
+
+    v_w_group.append(temp_group.copy())
+    temp_group.clear()
+
+#h strands are overcrossings, thus are unadorned
+for i in range(h_num):
+    for j in range(v_num):
+        temp_str3 = str(start + i + j * h_num)
+        if "+" in h_orient[i]:
+            temp_group.append(temp_str3)
+        else:
+            temp_group.append(temp_str3)
+            temp_group.reverse()
+
+    h_w_group.append(temp_group.copy())
+    temp_group.clear()
+
+#now we have got every component, what we need to do is simply link them up
+#in the order of the original textile code
+
+#we start by match up v_y_pair/v_w_group in the orientation of corresponding v symbol
+temp_follow_up=[]# general purpose buffer
+
+v_follow_up = []
+h_follow_up = []
+
+#match up v_y_pair/v_w_group
+for i in range(v_num):
+    if "+" in v_orient[i]:
+        temp_follow_up = v_y_pair[i]+v_w_group[i]
+        temp_follow_up.insert(0, "v" + str(i + 1) + "+")
+    else:
+        temp_follow_up = v_w_group[i]+v_y_pair[i]
+        temp_follow_up.insert(0, "v" + str(i + 1) + "-")
+
+    v_follow_up.append(temp_follow_up.copy())
+    temp_follow_up.clear()
+
+#match up h_x_pair/h_w_group
+for i in range(h_num):
+   if "+" in h_orient[i]:
+       temp_follow_up = h_x_pair[i]+h_w_group[i]
+       temp_follow_up.insert(0, "h" + str(i + 1) + "+")
+   else:
+       temp_follow_up = h_w_group[i]+h_x_pair[i]
+       temp_follow_up.insert(0, "h" + str(i + 1) + "-")
+
+   h_follow_up.append(temp_follow_up.copy())
+   temp_follow_up.clear()
+
+#now we finish the link up by matching v/h symbols contained
+match_up_table = v_follow_up+h_follow_up
+
+main_code_list=[]
+temp_main_code=[]
+
+for i in divided_t_list:
+   for j in match_up_table:
+       if i[-1]==j[0]:
+           temp_main_code = i[:-1]+j[1:]
+           main_code_list.append(temp_main_code.copy())
+           temp_main_code.clear()
+
+main_code_list = sum(main_code_list,[])
+
+print(main_code_list,x_code_list,y_code_list)
