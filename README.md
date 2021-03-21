@@ -1,5 +1,5 @@
 # Algorithimc-Classification-on-Periodic-Textiles
-A computational topology project conducted in DSTA group
+[A computational topology project conducted in DSTA group]
 
 Entangled periodic networks are vitally important
 and they exist in structures of various subjects
