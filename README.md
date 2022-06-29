@@ -43,3 +43,13 @@ and the output is Gauss code of its corresponding
 kernel [3], and thus to eliminate any duplicates by
 examining the Alexander Data [3] from the obtained
 Gauss code with the help of existing Python libraries.
+
+An example algorithm designed to convert textile code to Gauss code of the 
+kernel and its implementation in Python are presented here by consent from DSTA @ U of Liverpool.
+
+Topological Computational Libaries:
+https://www.sagemath.org/
+https://snappy.math.uic.edu/
+
+Background Reading Recommended:
+http://kurlin.org/projects/periodic-geometry-topology/textile-structures.pdf
